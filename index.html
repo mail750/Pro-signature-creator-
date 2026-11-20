@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pro Signature Maker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kristi&family=Nanum+Brush+Script&family=Mr+Dafoe&family=Herr+Von+Muellerhoff&family=Mrs+Saint+Delafield&family=Monsieur+La+Doulaise&family=Ms+Madi&family=Sacramento&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f5f2; --card: #ffffff; --ink: #1b1b1b; --muted: #6b6b6b;
+    --line: #e4e2dd; --accent: #1b1b1b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: Inter, system-ui, sans-serif; background: var(--bg);
+    color: var(--ink); min-height: 100vh; display: flex; justify-content: center;
+    padding: 32px 16px;
+  }
+  main { width: 100%; max-width: 560px; }
+  h1 { font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+  p.sub { margin: 0 0 24px; color: var(--muted); font-size: 14px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+  input[type=text] {
+    width: 100%; font: inherit; font-size: 18px; padding: 12px 14px;
+    border: 1px solid var(--line); border-radius: 10px; outline: none; background: #fff;
+  }
+  input[type=text]:focus { border-color: #999; }
+  .preview {
+    margin-top: 20px; border: 1px dashed var(--line); border-radius: 10px;
+    min-height: 170px; display: flex; align-items: center; justify-content: center;
+    padding: 12px; overflow: hidden;
+    background-color: #fff;
+  }
+  .preview.checker {
+    background-image: linear-gradient(45deg,#f0f0f0 25%,transparent 25%),linear-gradient(-45deg,#f0f0f0 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#f0f0f0 75%),linear-gradient(-45deg,transparent 75%,#f0f0f0 75%);
+    background-size: 16px 16px; background-position: 0 0,0 8px,8px -8px,-8px 0;
+  }
+  .preview img { max-width: 100%; height: auto; display: block; }
+  .preview .empty { color: #b5b5b5; font-size: 14px; }
+  .options { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 20px; }
+  .styles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 20px; }
+  .style-btn {
+    border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 8px 4px;
+    cursor: pointer; font-size: 22px; line-height: 1.2; white-space: nowrap; overflow: hidden; color: var(--ink);
+  }
+  .style-btn small { display: block; font-family: Inter, system-ui, sans-serif; font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .style-btn.active { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .swatch { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--line); cursor: pointer; }
+  .swatch.active { box-shadow: 0 0 0 2px var(--ink); }
+  .toggle { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; text-transform: none; letter-spacing: 0; color: var(--ink); font-weight: 400; margin: 0; }
+  .actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+  button.primary, button.secondary {
+    font: inherit; font-weight: 500; font-size: 15px; padding: 12px 18px; border-radius: 10px; cursor: pointer; flex: 1; min-width: 140px;
+  }
+  button.primary { background: var(--accent); color: #fff; border: 1px solid var(--accent); }
+  button.secondary { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+  button:disabled { opacity: .4; cursor: default; }
+  .status { margin-top: 12px; font-size: 13px; color: var(--muted); min-height: 18px; }
+  .hint { margin-top: 16px; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+  input[type=range] { width: 100%; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Pro Signature Maker</h1>
+  <p class="sub">Type a first name to create a handwritten signature image.</p>
+
+  <div class="card">
+    <label for="name">First name</label>
+    <input id="name" type="text" placeholder="e.g. Alistair" autocomplete="off" maxlength="24">
+
+    <div id="preview" class="preview"><span class="empty">Your signature will appear here</span></div>
+
+    <div class="styles" id="styles"></div>
+
+    <div class="options">
+      <div>
+        <label>Ink colour</label>
+        <div class="row" id="colours"></div>
+      </div>
+      <div>
+        <label>Options</label>
+        <label class="toggle"><input type="checkbox" id="swash" checked> Underline flourish</label>
+        <label class="toggle" style="margin-top:6px"><input type="checkbox" id="transparent"> Transparent background</label>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="primary" id="download" disabled>Download PNG</button>
+      <button class="secondary" id="copy" disabled>Copy image</button>
+    </div>
+    <div class="status" id="status"></div>
+    <div class="hint">Tip: you can also press and hold (or right-click) the signature to save it. In Outlook or Gmail, insert the PNG as an image in your signature settings.</div>
+  </div>
+</main>
+
+<script>
+// condense = horizontal squeeze, slant = forward lean, weight = extra ink thickness,
+// swashAt = how high the flourish crosses the letters (fraction of letter height)
+const STYLES = [
+  { id: 'kristi', family: 'Kristi',               size: 170, condense: 0.92, slant: 0.06, weight: 0.010, swashAt: 0.42, label: 'Pen' },
+  { id: 'nanum',  family: 'Nanum Brush Script',   size: 170, condense: 0.78, slant: 0.10, weight: 0.006, swashAt: 0.45, label: 'Brush' },
+  { id: 'dafoe',  family: 'Mr Dafoe',             size: 130, condense: 0.95, slant: 0.00, weight: 0.004, swashAt: 0.30, label: 'Bold script' },
+  { id: 'herr',   family: 'Herr Von Muellerhoff', size: 150, condense: 1.00, slant: 0.00, weight: 0.003, swashAt: 0.30, label: 'Elegant' },
+  { id: 'mrs',    family: 'Mrs Saint Delafield',  size: 140, condense: 1.00, slant: 0.00, weight: 0.003, swashAt: 0.30, label: 'Autograph' },
+  { id: 'monsieur', family: 'Monsieur La Doulaise', size: 130, condense: 1.00, slant: 0.00, weight: 0.003, swashAt: 0.30, label: 'Flourish' },
+  { id: 'madi',   family: 'Ms Madi',              size: 140, condense: 1.00, slant: 0.00, weight: 0.003, swashAt: 0.30, label: 'Quick' },
+  { id: 'sacramento', family: 'Sacramento',       size: 130, condense: 1.00, slant: 0.00, weight: 0.004, swashAt: 0.30, label: 'Neat' },
+];
+const COLOURS = ['#111111', '#1f3a68', '#0b5d4b', '#6a1b2a'];
+
+let state = { style: STYLES[0], colour: COLOURS[0] };
+let currentBlob = null;
+
+const $ = id => document.getElementById(id);
+const nameEl = $('name'), preview = $('preview'), statusEl = $('status');
+
+// Build style buttons
+STYLES.forEach((s, i) => {
+  const b = document.createElement('button');
+  b.className = 'style-btn' + (i === 0 ? ' active' : '');
+  b.style.fontFamily = `'${s.family}', cursive`;
+  b.textContent = 'Alistair ' + (i + 1);
+  b.title = s.label;
+  b.onclick = () => {
+    state.style = s;
+    document.querySelectorAll('.style-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    render();
+  };
+  $('styles').appendChild(b);
+});
+
+// Colour swatches
+COLOURS.forEach((c, i) => {
+  const d = document.createElement('div');
+  d.className = 'swatch' + (i === 0 ? ' active' : '');
+  d.style.background = c;
+  d.onclick = () => {
+    state.colour = c;
+    document.querySelectorAll('.swatch').forEach(x => x.classList.remove('active'));
+    d.classList.add('active');
+    render();
+  };
+  $('colours').appendChild(d);
+});
+
+function capitalise(s) {
+  s = s.trim();
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+}
+
+// Seeded random so the flourish stays stable for the same name
+function seeded(str) {
+  let h = 2166136261;
+  for (const ch of str) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
+  return () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return ((h >>> 0) % 10000) / 10000; };
+}
+
+// Smooth tapered pen stroke along a cubic curve: pressure builds quickly,
+// then thins to a hairline — like a real flick of a felt-tip.
+function drawSwash(ctx, p0, p1, p2, p3, maxW, colour) {
+  const N = 160, pts = [];
+  for (let i = 0; i <= N; i++) {
+    const t = i / N, u = 1 - t;
+    const x = u*u*u*p0[0] + 3*u*u*t*p1[0] + 3*u*t*t*p2[0] + t*t*t*p3[0];
+    const y = u*u*u*p0[1] + 3*u*u*t*p1[1] + 3*u*t*t*p2[1] + t*t*t*p3[1];
+    const press = Math.min(1, t / 0.06) * Math.pow(1 - t, 0.9);
+    pts.push({ x, y, w: maxW * (0.15 + 0.85 * press) });
+  }
+  const L = [], R = [];
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)];
+    let dx = b.x - a.x, dy = b.y - a.y; const len = Math.hypot(dx, dy) || 1;
+    const nx = -dy / len, ny = dx / len, p = pts[i];
+    L.push([p.x + nx * p.w / 2, p.y + ny * p.w / 2]);
+    R.push([p.x - nx * p.w / 2, p.y - ny * p.w / 2]);
+  }
+  ctx.save();
+  ctx.fillStyle = colour;
+  ctx.beginPath();
+  ctx.moveTo(L[0][0], L[0][1]);
+  for (const q of L) ctx.lineTo(q[0], q[1]);
+  for (let i = R.length - 1; i >= 0; i--) ctx.lineTo(R[i][0], R[i][1]);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+async function render() {
+  const name = capitalise(nameEl.value);
+  if (!name) {
+    preview.innerHTML = '<span class="empty">Your signature will appear here</span>';
+    currentBlob = null; $('download').disabled = true; $('copy').disabled = true;
+    return;
+  }
+  const s = state.style;
+  const font = `${s.size}px '${s.family}'`;
+  try { await document.fonts.load(font, name); } catch (e) {}
+
+  const scale = 2; // crisp on retina
+  const tmp = document.createElement('canvas').getContext('2d');
+  tmp.font = font;
+  const m = tmp.measureText(name);
+  const ascent = m.actualBoundingBoxAscent || s.size * 0.8;
+  const descent = m.actualBoundingBoxDescent || s.size * 0.25;
+  const left = m.actualBoundingBoxLeft || 0;
+  const rawW = (m.actualBoundingBoxRight || m.width) + Math.max(0, left);
+
+  // Size after squeeze + lean
+  const textW = rawW * s.condense + ascent * s.slant + descent * s.slant;
+  const swash = $('swash').checked;
+  const lead = swash ? s.size * 0.22 : 0;   // flourish starts left of the first letter
+  const tail = swash ? s.size * 0.35 : 0;   // and runs on past the last one
+  const padX = s.size * 0.12, padY = s.size * 0.14;
+  const w = Math.ceil(padX * 2 + lead + textW + tail);
+  const under = swash ? s.size * 0.22 : 0;   // room for the underline
+  const h = Math.ceil(padY * 2 + ascent + Math.max(descent, under));
+
+  const c = document.createElement('canvas');
+  c.width = w * scale; c.height = h * scale;
+  const ctx = c.getContext('2d');
+  ctx.scale(scale, scale);
+  if (!$('transparent').checked) { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); }
+
+  const baseline = padY + ascent;
+  const textX = padX + lead + descent * s.slant;
+
+  // Name: squeezed, leaning forward, with a touch of extra ink
+  ctx.save();
+  ctx.translate(textX, baseline);
+  ctx.transform(s.condense, 0, -s.slant, 1, 0, 0);
+  ctx.font = font;
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = state.colour;
+  ctx.fillText(name, Math.max(0, left), 0);
+  if (s.weight > 0) {
+    ctx.strokeStyle = state.colour;
+    ctx.lineWidth = s.size * s.weight;
+    ctx.lineJoin = 'round';
+    ctx.strokeText(name, Math.max(0, left), 0);
+  }
+  ctx.restore();
+
+  if (swash) {
+    const rnd = seeded(name + s.id);
+    // Sits just under the letters, starts left of the first letter and
+    // sweeps out to the right with a slight upward lift at the end
+    const y = baseline + s.size * 0.10;
+    const x0 = padX * 0.6, x3 = w - padX * 0.6;
+    const span = x3 - x0;
+    drawSwash(ctx,
+      [x0, y + s.size * 0.03],
+      [x0 + span * 0.35, y + s.size * (0.05 + rnd() * 0.03)],
+      [x0 + span * 0.70, y + s.size * (0.01 + rnd() * 0.02)],
+      [x3, y - s.size * (0.06 + rnd() * 0.05)],
+      s.size * 0.028, state.colour);
+  }
+
+  preview.classList.toggle('checker', $('transparent').checked);
+  c.toBlob(blob => {
+    currentBlob = blob;
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.src = url; img.alt = name + ' signature';
+    img.style.width = Math.min(w, 480) + 'px';
+    preview.innerHTML = ''; preview.appendChild(img);
+    $('download').disabled = false; $('copy').disabled = false;
+  }, 'image/png');
+}
+
+let t;
+nameEl.addEventListener('input', () => { clearTimeout(t); t = setTimeout(render, 150); statusEl.textContent = ''; });
+$('swash').addEventListener('change', render);
+$('transparent').addEventListener('change', render);
+
+// Downloads via the platform capability
+let downloads = null;
+(async () => {
+  try { if (window.claude && claude.use) downloads = await Promise.race([claude.use('downloads'), new Promise(r => setTimeout(() => r(null), 3000))]); } catch (e) {}
+})();
+
+$('download').onclick = async () => {
+  if (!currentBlob) return;
+  const fname = capitalise(nameEl.value).replace(/[^\w-]+/g, '') + '-signature.png';
+  if (!downloads) {
+    try { downloads = window.claude && claude.use ? await Promise.race([claude.use('downloads'), new Promise(r => setTimeout(() => r(null), 1500))]) : null; } catch (e) {}
+  }
+  if (downloads) {
+    try {
+      await downloads.save({ filename: fname, data: currentBlob });
+      statusEl.textContent = 'Saved ' + fname;
+    } catch (e) {
+      statusEl.textContent = e && e.code === 'declined' ? 'Download cancelled.' :
+        'Download not available here — press and hold (or right-click) the image to save it.';
+    }
+  } else {
+    // Normal browser download (e.g. when hosted on Replit)
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(currentBlob); a.download = fname;
+    document.body.appendChild(a); a.click(); a.remove();
+    statusEl.textContent = 'Downloaded ' + fname;
+  }
+};
+
+$('copy').onclick = async () => {
+  if (!currentBlob) return;
+  try {
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': currentBlob })]);
+    statusEl.textContent = 'Copied — paste it straight into your email signature.';
+  } catch (e) {
+    statusEl.textContent = 'Copy isn’t allowed here — use Download or press and hold the image instead.';
+  }
+};
+
+nameEl.focus();
+</script>
+</body>
+</html>
